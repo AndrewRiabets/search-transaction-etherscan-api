@@ -1,5 +1,5 @@
 {
-  "name": "api-etherscan",
+  "name": "search-transaction-etherscan-api",
   "version": "1.0.0",
   "description": "",
   "type": "module",
