@@ -3,13 +3,15 @@ import ApiError from "../error-hendling/api.error.js";
 import TransactionOperations from "../repository/transaction.repository.js";
 
 class TransactionsService {
-  async getTransactions({ query, queryType }, params) {
+  async getTransactions({ query, queryType, page = 1, limit = 10 }) {
+    const latestBlock = await ContainDatabase.getLastBlockNumber();
     let transactions;
     switch (queryType) {
       case "getByHash":
         transactions = await TransactionOperations.getTransactionByHash(query);
         if (!transactions) {
-          transactions = await ContainDatabase.getTransactionByHashFromAPI(
+          await ContainDatabase.getTransactionByHashFromAPI(query);
+          transactions = await TransactionOperations.getTransactionByHash(
             query
           );
         }
@@ -17,20 +19,23 @@ class TransactionsService {
       case "getByBlock":
         transactions = await TransactionOperations.getTransactionsByBlock(
           query,
-          params
+          page,
+          limit
         );
-        if (transactions.length == 0) {
+        if (transactions.transactions.length == 0) {
           await ContainDatabase.getBlockByNumberFromAPI(query, true);
           transactions = await TransactionOperations.getTransactionsByBlock(
             query,
-            params
+            page,
+            limit
           );
         }
         break;
       case "getBySender":
         transactions = await TransactionOperations.getTransactionsBySender(
           query,
-          params
+          page,
+          limit
         );
         if (transactions.length == 0) {
           throw ApiError.NotAcceptable("Транзакции не найдены");
@@ -39,15 +44,20 @@ class TransactionsService {
       case "getByRecipient":
         transactions = await TransactionOperations.getTransactionByRecipient(
           query,
-          params
+          page,
+          limit
         );
         if (transactions.length == 0) {
           throw ApiError.NotAcceptable("Транзакции не найдены");
         }
         break;
     }
-    const latestBlock = await ContainDatabase.getLastBlockNumber();
-    return { transactions, latestBlock };
+    const data = {
+      transactions: transactions.transactions,
+      pages: transactions.pages,
+      latestBlock,
+    };
+    return data;
   }
 }
 

@@ -24,7 +24,8 @@ class ContainDatabase {
       },
     });
     if (data.result) {
-      return data.result;
+      const lastBlockNumber = parseInt(data.result);
+      return lastBlockNumber;
     } else {
       throw ApiError.NotAcceptable("Номер блоке не найден в API");
     }
@@ -48,7 +49,7 @@ class ContainDatabase {
     const blockData = await this.getBlockByNumberFromAPI(
       transactionData.blockNumber
     );
-    const newTransactions = this.pushTransactionToDB(
+    const newTransactions = await this.pushTransactionToDB(
       blockData,
       transactionData
     );
